@@ -1,0 +1,32 @@
+{
+  "name": "passo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/torrobinson/passo.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/torrobinson/passo/issues"
+  },
+  "homepage": "https://github.com/torrobinson/passo#readme",
+  "devDependencies": {
+    "browserify": "^17.0.0",
+    "gulp": "^4.0.2",
+    "gulp-rename": "^2.0.0",
+    "gulp-sass": "^5.1.0",
+    "sass": "^1.69.4",
+    "tsify": "^5.0.4",
+    "vinyl-source-stream": "^2.0.0"
+  },
+  "dependencies": {
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "typescript": "^5.2.2"
+  }
+}
