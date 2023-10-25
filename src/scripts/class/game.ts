@@ -2,6 +2,7 @@ import { PlayerType } from "../enum/player-type";
 import { Piece } from "./piece";
 import { Point } from "./point";
 import { Tile } from "./tile";
+import { EventEmitter } from "./../events/event-emitter";
 
 export class Game {
 
@@ -13,9 +14,9 @@ export class Game {
 	private height: number = 5;
 	private width: number = 5;
 
-	constructor() {
-		this.initialize();
-	}
+	// Events
+	public onPieceCreated: EventEmitter<Piece> = new EventEmitter<Piece>();
+	public onTileCreated: EventEmitter<Tile> = new EventEmitter<Tile>();
 
 	public initialize(): void {
 		// Reset everything
@@ -35,6 +36,7 @@ export class Game {
 			for (let y: number = 0; y < this.height; y++) {
 				let newTile = new Tile(this, new Point(x, y));
 				this.tiles.push(newTile);
+				this.onTileCreated.emit(newTile);
 			}
 		}
 	}
@@ -43,26 +45,25 @@ export class Game {
 	private resetPieces(): void {
 		this.pieces = [];
 
-		// Black at the top
-		for (let tile of this.tiles.filter(t => t.y === 0)) {
-			this.pieces.push(
-				new Piece(
-					this,
-					PlayerType.Black,
-					tile.position
-				)
-			);
-		}
+		for (let x: number = 0; x < this.width; x++) {
 
-		// Red at the bottom
-		for (let tile of this.tiles.filter(t => t.y === this.height - 1)) {
-			this.pieces.push(
-				new Piece(
-					this,
-					PlayerType.Red,
-					tile.position
-				)
+			// Black on top row
+			let newBlack: Piece = new Piece(
+				this,
+				PlayerType.Black,
+				new Point(x, 0)
 			);
+			this.pieces.push(newBlack);
+			this.onPieceCreated.emit(newBlack);
+
+			// Red on bottom
+			let newRed: Piece = new Piece(
+				this,
+				PlayerType.Black,
+				new Point(x, this.height - 1)
+			);
+			this.pieces.push(newRed);
+			this.onPieceCreated.emit(newRed);
 		}
 	}
 

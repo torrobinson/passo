@@ -1,9 +1,12 @@
 import { Game } from "./class/game";
+import { HtmlRenderer } from "./renderers/html-renderer";
 
-let game: Game;
+let renderer: HtmlRenderer = new HtmlRenderer();
+let game: Game = new Game();
+
 
 document.addEventListener("DOMContentLoaded", () => {
-
-	game = new Game();
+	renderer.bindToGame(game);
+	game.initialize();
 
 });
