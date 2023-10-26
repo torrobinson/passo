@@ -17,15 +17,16 @@ export abstract class HtmlUtilities {
 	// 	});
 	// }
 
-	// static liveBind(eventType, elementQuerySelector, cb) {
-	// 	//document.removeEventListener(eventType, handler);
-	// 	document.addEventListener(eventType, event => {
-	// 		let el = event.target.closest(elementQuerySelector);
-	// 		if (el) {
-	// 			cb.call(this, el, event);
-	// 		}
-	// 	});
-	// }
+	static liveBind(eventType: string, elementQuerySelector: string, cb: (el: Element, event: Event) => void): void {
+		//document.removeEventListener(eventType, handler);
+		document.addEventListener(eventType, (event: Event) => {
+			let el = (event.target as Element).closest(elementQuerySelector);
+			if (el) {
+				cb.call(this, el, event);
+			}
+		});
+	}
+
 
 	// static shake(el: HTMLElement): void {
 	// 	el.classList.add('shake');

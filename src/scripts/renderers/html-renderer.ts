@@ -1,6 +1,7 @@
 import { Game } from "../class/game";
 import { MoveablePiece } from "../class/movable-piece";
 import { Piece } from "../class/piece";
+import { Point } from "../class/point";
 import { Tile } from "../class/tile";
 import { PlayerType } from "../enum/player-type";
 import { OnPlayerTurnStartEventArgs } from "../events/on-player-turn-start-event-args";
@@ -23,6 +24,30 @@ export class HtmlRenderer {
 		this.movesHolder = document.querySelector('.board .moves')!;
 
 		this.turnHint = document.querySelector('.turn-hint')!;
+
+		// Bind to piece clicks
+		HtmlUtilities.liveBind('click', 'piece', (el, e) => {
+			let clickedPiece: Piece = this.game.pieces.filter(p => p.id == el.getAttribute('data-id'))![0];
+			this.handlePieceClicked(clickedPiece);
+		});
+
+		// Bind to move clicks
+		HtmlUtilities.liveBind('click', 'move', (el, e) => {
+			// Parse the clicked location from  the move overlay
+			let clickedPoint: Point = new Point(
+				parseInt(el.getAttribute('data-x')!),
+				parseInt(el.getAttribute('data-y')!)
+			);
+
+			// And if we have a valid piece selected
+			if (this.selectedPiece != null) {
+				// Hide the overlay
+				this.hidePossibleMoves();
+
+				// Make the move
+				this.movePiece(this.selectedPiece, clickedPoint);
+			}
+		});
 	}
 
 	public bindToGame(game: Game): void {
@@ -84,7 +109,7 @@ export class HtmlRenderer {
 			this.turnHint.classList.remove('black');
 			this.turnHint.classList.add(args.player);
 
-			// Update pieces (their canMove states might have changed)
+			// Update local piece can-move states
 			// Set all as non-moveable
 			for (let piece of this.game.pieces) {
 				let pieceElement: HTMLElement = this.getPieceElement(piece)!;
@@ -96,14 +121,15 @@ export class HtmlRenderer {
 				moveablePieceElement.setAttribute('data-can-move', true.toString());
 			}
 
-			// Show possible moves
-			// TODO: no, only show these on piece click
-			//this.renderPossibleMoves();
+			if (args.moveablePieces.length == 0) {
+				// The players turn has started but they can't make any moves == they lose
+				alert(`${args.player} cannot make any moves. ${args.player} loses.`);
+			}
 		});
 	}
 
 	private getPieceElement(piece: Piece): HTMLElement | null {
-		let foundElement: HTMLElement | null = this.piecesHolder.querySelector(`piece[data-id="${piece.id}"][data-owner="${piece.owner}"]`);
+		let foundElement: HTMLElement | null = this.piecesHolder.querySelector(`piece[data-id="${piece.id}"]`);
 		return foundElement;
 	}
 
@@ -132,6 +158,10 @@ export class HtmlRenderer {
 		tileElement.setAttribute('data-in-play', tile.inPlay.toString());
 	}
 
+	private movePiece(piece: Piece, toPosition: Point): void {
+		piece.move(toPosition);
+	}
+
 	private setPieceAsLastActive(piece: Piece): void {
 		let pieceElement: HTMLElement = this.getPieceElement(piece)!;
 		let lastActiveClass: string = 'last-active-piece';
@@ -145,15 +175,41 @@ export class HtmlRenderer {
 		pieceElement.classList.add(lastActiveClass);
 	}
 
-	private renderPossibleMoves(): void {
-		return;
-		let movablePieces: MoveablePiece[] = this.game.movablePieces;
+	private selectedPiece: Piece | null = null;
+	private handlePieceClicked(clickedPiece: Piece): void {
+		// If re-clicking a piece, 
+		if (this.selectedPiece == clickedPiece) {
+			// Unselect it
+			this.hidePossibleMoves();
+			this.selectedPiece = null;
+		}
+		else {
+			// We're not re-clicking a piece, so select it
+			this.selectedPiece = clickedPiece;
 
+			// Check if it's the pieces turn
+			if (this.game.turnPlayer == clickedPiece.owner) {
+				// Check if the piece can move
+				if (this.game.movablePieces.map(mp => mp.piece).includes(clickedPiece)) {
+					// It can move
+					this.showPossibleMoves(clickedPiece);
+				}
+				else {
+					// Its your turn but this piece can't move
+				}
+			}
+			else {
+				console.log('Its not your turn!');
+			}
+		}
+	}
+
+	private showPossibleMoves(forPiece: Piece): void {
 		// Clear existing move overlays
-		this.movesHolder.innerHTML = '';
+		this.hidePossibleMoves();
 
 		// Create new ones for those in movablePieces
-		for (let movablePiece of movablePieces) {
+		for (let movablePiece of this.game.movablePieces.filter(mp => mp.piece == forPiece)) {
 			for (let point of movablePiece.possiblePositions) {
 				this.movesHolder.appendChild(
 					HtmlUtilities.elementFromString(`
@@ -163,5 +219,8 @@ export class HtmlRenderer {
 				)
 			}
 		}
+	}
+	private hidePossibleMoves(): void {
+		this.movesHolder.innerHTML = '';
 	}
 }

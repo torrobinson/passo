@@ -124,10 +124,10 @@ html, body {
   z-index: 101;
 }
 .board .pieces piece[data-can-move=false] {
-  opacity: 0.4;
+  opacity: 0.5;
 }
 .board .moves move {
   z-index: 102;
   background-color: red;
-  opacity: 0.1;
+  opacity: 0.3;
 }
