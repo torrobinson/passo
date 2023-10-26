@@ -1,4 +1,5 @@
 import { Game } from "./game";
+import { Piece } from "./piece";
 import { Point } from "./point";
 
 export class Tile {
@@ -12,5 +13,18 @@ export class Tile {
 
 		// Default to in-play
 		this.inPlay = true;
+	}
+
+	public get pieces(): Piece[] {
+		return this.game.pieces.filter(p => p.position.x == this.position.x && p.position.y == this.position.y);
+	}
+
+	public get isEmpty(): boolean {
+		return this.pieces.length == 0;
+	}
+
+	public removeFromPlay(): void {
+		this.inPlay = false;
+		this.game.onTileRemovedFromPlay.emit(this);
 	}
 }

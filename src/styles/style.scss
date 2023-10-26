@@ -1,3 +1,148 @@
 html, body{
-	background-color:#414141;
+	background-color:#878787;
+}
+
+.turn-hint{
+	height: 100px;
+	width: 200px;
+	border: 1px solid black;
+
+	&.red{
+		background-color: red;
+	}
+
+	&.black{
+		background-color: black;
+	}
+}
+
+.game-area{
+	display: flex;
+    justify-content: center;
+}
+
+.board{
+
+	// Constants
+	$height: 5;
+	$width: 5;
+
+	// Common
+	$tileHeightPercent: calc(100% / $height);
+	$tileWidthPercent: calc(100% / $width);
+
+	display: inline-block;
+	position: relative;
+
+	$minBoardSizePixels: 300px;
+	$maxBoardSizePixels: 900px;
+	min-height: $minBoardSizePixels;
+	min-width: $minBoardSizePixels;
+	max-width: $maxBoardSizePixels;
+	max-height: $maxBoardSizePixels;
+
+	width: 50%;
+
+	// Position pieces and tiles based on x/y
+	piece, tile{
+			display: inline-block;
+			cursor: pointer;
+
+			height: $tileHeightPercent;
+			width: $tileWidthPercent;
+
+			position: absolute !important;
+			@for $x from 0 through $width {
+				&[data-x='#{$x}']{
+					left: #{$x * $tileWidthPercent};
+				}
+			}
+			@for $y from 0 through $height {
+				&[data-y='#{$y}']{
+					top: #{100% - ($y + 1) * $tileHeightPercent};
+				}
+			}
+
+			position: relative;
+			text-align: center;
+	}
+
+	&:after {
+		content: "";
+		display: block;
+		padding-bottom: 100%;
+	}
+
+	.tiles{
+		tile{
+
+			border: 1px solid black;	
+			background-color: white;
+			transform-origin: center center;
+
+			// Style in-play tiles
+			&[data-in-play="true"]{
+				opacity: 1.0;
+			}
+
+			// Style removed tiles
+			&[data-in-play="false"]{
+				opacity: 0.0;
+				transform: scale(0.1);
+				border: none !important;
+			}
+
+			$fadeAnimation: 1000ms ease;
+			transition: 
+				opacity #{$fadeAnimation},
+				transform #{$fadeAnimation};
+		}
+	}
+
+	.pieces{
+		position: absolute;
+		height: 100%;
+		width: 100%;		
+		piece{
+
+			border-radius: 50%;
+
+			border: 1px solid black;
+
+			transform-origin: center center;
+
+			// Style pieces by owner
+			&[data-owner="black"]{
+				background-color: black;
+			}
+			&[data-owner="red"]{
+				background-color: red;
+			}
+
+			// Style pieces by height
+			&[data-height="1"]{
+				z-index: 1;
+			}
+			&[data-height="2"]{
+				z-index: 2;
+				transform: scale(0.7);
+			}
+			&[data-height="3"]{
+				z-index: 3;
+				transform: scale(0.4);
+			}
+
+			$moveAnimation: 500ms ease;
+			transition: 
+				top #{$moveAnimation}, 
+				left #{$moveAnimation},
+				transform #{$moveAnimation};
+
+			&.last-active-piece{
+				z-index: 999;
+			}
+			
+		}
+	}
+
 }

@@ -3,7 +3,7 @@ export interface Listener<T> {
 }
 
 export interface Disposable {
-	dispose();
+	dispose(): void;
 }
 
 export class EventEmitter<T> {

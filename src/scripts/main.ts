@@ -1,12 +1,20 @@
 import { Game } from "./class/game";
 import { HtmlRenderer } from "./renderers/html-renderer";
 
-let renderer: HtmlRenderer = new HtmlRenderer();
-let game: Game = new Game();
 
 
 document.addEventListener("DOMContentLoaded", () => {
+	// Create our game and renderer
+	let renderer: HtmlRenderer = new HtmlRenderer();
+	let game: Game = new Game();
+
+	// Set up the renderer to listen for game events
 	renderer.bindToGame(game);
+
+	// Initialize the game
 	game.initialize();
 
+	setTimeout(() => {
+		game.emulatePlay();
+	}, 1000);
 });

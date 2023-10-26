@@ -1,7 +1,6 @@
 export class Point {
 	x: number;
 	y: number;
-	hasPiece: boolean;
 
 	constructor(x: number, y: number) {
 		this.x = x;
