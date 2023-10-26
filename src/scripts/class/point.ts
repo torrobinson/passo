@@ -11,9 +11,20 @@ export class Point {
 		return new Point(this.x + otherPoint.x, this.y + otherPoint.y);
 	}
 
-	get isInBounds(): boolean {
-		return this.x >= 0 && this.x <= 7
-			&& this.y >= 0 && this.y <= 7
+	public get adjacentPoints(): Point[] {
+		let x = this.x;
+		let y = this.y;
+
+		return [
+			new Point(x - 1, y - 1),
+			new Point(x, y - 1),
+			new Point(x + 1, y - 1),
+			new Point(x - 1, y),
+			new Point(x + 1, y),
+			new Point(x - 1, y + 1),
+			new Point(x, y + 1),
+			new Point(x + 1, y + 1),
+		];
 	}
 
 	public toString(): string {

@@ -2,6 +2,11 @@ html, body{
 	background-color:#878787;
 }
 
+$zIndexPieces: 0; // Lets say 0-100 for pieces
+$zIndexPieceActive: 101;
+$zIndexMoves: 102;
+
+
 .turn-hint{
 	height: 100px;
 	width: 200px;
@@ -44,7 +49,7 @@ html, body{
 	width: 50%;
 
 	// Position pieces and tiles based on x/y
-	piece, tile{
+	piece, tile, move{
 			display: inline-block;
 			cursor: pointer;
 
@@ -92,7 +97,7 @@ html, body{
 				border: none !important;
 			}
 
-			$fadeAnimation: 1000ms ease;
+			$fadeAnimation: 1500ms ease;
 			transition: 
 				opacity #{$fadeAnimation},
 				transform #{$fadeAnimation};
@@ -121,14 +126,14 @@ html, body{
 
 			// Style pieces by height
 			&[data-height="1"]{
-				z-index: 1;
+				z-index: $zIndexPieces + 1;
 			}
 			&[data-height="2"]{
-				z-index: 2;
+				z-index: $zIndexPieces + 2;
 				transform: scale(0.7);
 			}
 			&[data-height="3"]{
-				z-index: 3;
+				z-index: $zIndexPieces + 3;
 				transform: scale(0.4);
 			}
 
@@ -139,10 +144,24 @@ html, body{
 				transform #{$moveAnimation};
 
 			&.last-active-piece{
-				z-index: 999;
+				z-index: $zIndexPieceActive;
+			}
+
+			&[data-can-move="false"]{
+				opacity: 0.4;
 			}
 			
 		}
+	}
+
+	.moves{
+
+		move{
+			z-index: $zIndexMoves;
+			background-color: red;
+			opacity: 0.1;
+		}
+
 	}
 
 }

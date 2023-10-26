@@ -23,6 +23,20 @@ export class Tile {
 		return this.pieces.length == 0;
 	}
 
+	// Gets adjacent in-play tiles
+	public get adjacentTiles(): Tile[] {
+		// Get all possible 8 directions
+		let adjacentPointsAsStrings: string[] = this.position.adjacentPoints.map(p => p.toString());
+
+		// Get game tiles that are in play that match those locations
+		let adjacentTiles = this.game.tiles.filter(t =>
+			t.inPlay
+			&& adjacentPointsAsStrings.includes(t.position.toString())
+		);
+
+		return adjacentTiles;
+	}
+
 	public removeFromPlay(): void {
 		this.inPlay = false;
 		this.game.onTileRemovedFromPlay.emit(this);

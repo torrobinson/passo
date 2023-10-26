@@ -3,35 +3,86 @@ import { Piece } from "./piece";
 import { Point } from "./point";
 import { Tile } from "./tile";
 import { EventEmitter } from "./../events/event-emitter";
+import { MoveablePiece } from "./movable-piece";
+import { Rules } from "./rules";
+import { OnPlayerTurnStartEventArgs } from "../events/on-player-turn-start-event-args";
 
 export class Game {
+
+	// Rules and constraints
+	public rules: Rules = new Rules();
 
 	// State
 	public pieces: Piece[] = [];
 	public tiles: Tile[] = [];
-	public turn: PlayerType = PlayerType.Red;
+	public turnPlayer: PlayerType = PlayerType.Red;
 
 	// Dimensions
 	private height: number = 5;
 	private width: number = 5;
 
 	// Events
+	public onGameStart: EventEmitter<Game> = new EventEmitter<Game>();
 	public onPieceCreated: EventEmitter<Piece> = new EventEmitter<Piece>();
 	public onPieceMoved: EventEmitter<Piece> = new EventEmitter<Piece>();
 	public onTileCreated: EventEmitter<Tile> = new EventEmitter<Tile>();
 	public onTileRemovedFromPlay: EventEmitter<Tile> = new EventEmitter<Tile>();
-	public onPlayerTurnStart: EventEmitter<PlayerType> = new EventEmitter<PlayerType>();
+	public onPlayerTurnStart: EventEmitter<OnPlayerTurnStartEventArgs> = new EventEmitter<OnPlayerTurnStartEventArgs>();
 	public onPlayerTurnEnd: EventEmitter<PlayerType> = new EventEmitter<PlayerType>();
 
 
 	public initialize(): void {
-		// Reset everything
+		// Emit that a new game has started
+		this.onGameStart.emit(this);
 
 		// Setup tiles
 		this.resetTiles();
 
 		// Setup pieces on back rows
 		this.resetPieces();
+	}
+
+	public endTurn(forPlayer: PlayerType): void {
+
+		let oldPlayer: PlayerType = forPlayer;
+		let newPlayer: PlayerType = (forPlayer == PlayerType.Black ? PlayerType.Red : PlayerType.Black);
+
+		// Set the new player
+		this.turnPlayer = newPlayer;
+
+		// Emit that current players turn ended
+		this.onPlayerTurnEnd.emit(oldPlayer);
+
+		// Emit that new players turn started
+		this.onPlayerTurnStart.emit(new OnPlayerTurnStartEventArgs(newPlayer, this.movablePieces));
+	}
+
+	public get movablePieces(): MoveablePiece[] {
+		let possibleMoves: MoveablePiece[] = [];
+
+		// Get the current player
+		let currentPlayer: PlayerType = this.turnPlayer;
+
+		// Get their current active pieces
+		let pieces: Piece[] = this.pieces.filter(p => p.owner == currentPlayer);
+
+		// For each of the current player's pieces
+		for (let piece of pieces) {
+			// Get its valid moves
+			let validMoves: Point[] = piece.validMoves;
+
+			// And create a movable piece if it has any
+			if (validMoves.length > 0) {
+				possibleMoves.push(
+					new MoveablePiece(
+						piece,
+						validMoves
+					)
+				);
+			}
+		}
+
+		return possibleMoves;
 	}
 
 
@@ -42,12 +93,12 @@ export class Game {
 		let dur: number = 500;
 
 		// Black
-		let blackPiece: Piece = this.pieces.filter(p => p.owner == 'black' && p.id == 1)[0];
+		let blackPiece: Piece = this.pieces.filter(p => p.id == 'black|1')[0];
 		blackPiece.move(new Point(0, 1));
 		await this.sleep(dur);
 
 		// Red
-		let redPiece: Piece = this.pieces.filter(p => p.owner == 'red' && p.id == 1)[0];
+		let redPiece: Piece = this.pieces.filter(p => p.id == 'red|1')[0];
 		redPiece.move(new Point(1, 3));
 		await this.sleep(dur);
 
@@ -119,23 +170,6 @@ export class Game {
 	private createPiece(piece: Piece): void {
 		this.pieces.push(piece);
 		this.onPieceCreated.emit(piece);
-	}
-
-	// Turn helpers
-	public endTurn(): void {
-
-		// Emit that current players turn ended
-		this.onPlayerTurnEnd.emit(this.turn);
-
-		if (this.turn == PlayerType.Black) {
-			this.turn = PlayerType.Red;
-		}
-		else {
-			this.turn = PlayerType.Black;
-		}
-
-		// Emit that new players turn started
-		this.onPlayerTurnStart.emit(this.turn);
 	}
 
 }
