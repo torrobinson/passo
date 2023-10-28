@@ -5,7 +5,7 @@ import { Tile } from "./tile";
 
 export class Piece {
 	id: string;
-	active: boolean;
+	inPlay: boolean;
 	game: Game;
 	owner: PlayerType;
 	position: Point;
@@ -14,7 +14,7 @@ export class Piece {
 	constructor(game: Game, index: number, owner: PlayerType, position: Point) {
 		this.game = game;
 		this.id = `${owner}|${index}`;
-		this.active = true;
+		this.inPlay = true;
 		this.owner = owner;
 		this.position = position;
 		this.height = 1;
@@ -67,12 +67,45 @@ export class Piece {
 				sourceTile.removeFromPlay();
 			}
 
-			// TODO: check for unique contiguous (inc. diag) islands
-			// For each island
-			// If there's no pieces on the island, remove all tiles in it from play
-			// If there are pieces, check if any can make a move
-			// If it can, fine
-			// If NONE can, then remove the tiles AND pieces from play 
+			let islands: Tile[][] = this.game.getIslands();
+			if (islands.length > 1) {
+				// We have orphaned islands
+
+				// For each island,
+				for (let island of islands) {
+					// Check if it's empty
+					if (!island.some(i => i.pieces.length > 0)) {
+						// None of the island's pieces have points.
+						for (let tile of island) {
+							tile.inPlay = false;
+							this.game.onTileRemovedFromPlay.emit(tile);
+						}
+					}
+					else {
+						// Check if all island pieces can't move
+						let allMoveablePieces: Piece[] = this.game.getMovablePiecesForAnyPlayer().map(mp => mp.piece);
+						let pieceCanMoveOnIsland: boolean = false;
+						for (let tile of island) {
+							for (let piece of tile.pieces) {
+								if (allMoveablePieces.includes(piece)) pieceCanMoveOnIsland = true;
+							}
+						}
+						if (!pieceCanMoveOnIsland) {
+							for (let tile of island) {
+								// Kill the tile
+								tile.inPlay = false;
+								this.game.onTileRemovedFromPlay.emit(tile);
+
+								// Kill the piece
+								for (let piece of tile.pieces) {
+									piece.inPlay = false;
+									this.game.onPieceRemovedFromPlay.emit(piece);
+								}
+							}
+						}
+					}
+				}
+			}
 
 			// Emit event
 			this.game.onPieceMoved.emit(this);

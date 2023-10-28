@@ -14,7 +14,5 @@ document.addEventListener("DOMContentLoaded", () => {
 	// Initialize the game
 	game.initialize();
 
-	setTimeout(() => {
-		game.emulatePlay();
-	}, 1000);
+	//game.emulatePlay();
 });

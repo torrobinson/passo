@@ -4,7 +4,6 @@ import { Piece } from "../class/piece";
 import { Point } from "../class/point";
 import { Tile } from "../class/tile";
 import { PlayerType } from "../enum/player-type";
-import { OnPlayerTurnStartEventArgs } from "../events/on-player-turn-start-event-args";
 import { HtmlUtilities } from "../utility/html-utilities";
 
 export class HtmlRenderer {
@@ -76,6 +75,11 @@ export class HtmlRenderer {
 			this.updateTileElement(tile);
 		});
 
+		// When a piece if removed from play
+		this.game.onPieceRemovedFromPlay.on((piece: Piece) => {
+			this.updatePieceElement(piece);
+		});
+
 		// When a piece is created
 		this.game.onPieceCreated.on((piece: Piece) => {
 			let newPiece: HTMLElement = HtmlUtilities.elementFromString(`
@@ -103,11 +107,11 @@ export class HtmlRenderer {
 		});
 
 		// When a turn starts
-		this.game.onPlayerTurnStart.on((args: OnPlayerTurnStartEventArgs) => {
+		this.game.onPlayerTurnStart.on((newPlayer: PlayerType) => {
 			// Render the turn hint
 			this.turnHint.classList.remove('red');
 			this.turnHint.classList.remove('black');
-			this.turnHint.classList.add(args.player);
+			this.turnHint.classList.add(newPlayer);
 
 			// Update local piece can-move states
 			// Set all as non-moveable
@@ -116,15 +120,17 @@ export class HtmlRenderer {
 				pieceElement.setAttribute('data-can-move', false.toString());
 			}
 
-			for (let moveablePiece of args.moveablePieces) {
+			let newPlayerPossibleMoves: MoveablePiece[] = this.game.getMovablePiecesForCurrentPlayer();
+			if (newPlayerPossibleMoves.length == 0) {
+				// The players turn has started but they can't make any moves == they lose
+				alert(`${newPlayer} cannot make any moves. ${newPlayer} loses.`);
+			}
+
+			for (let moveablePiece of newPlayerPossibleMoves) {
 				let moveablePieceElement: HTMLElement = this.getPieceElement(moveablePiece.piece)!;
 				moveablePieceElement.setAttribute('data-can-move', true.toString());
 			}
 
-			if (args.moveablePieces.length == 0) {
-				// The players turn has started but they can't make any moves == they lose
-				alert(`${args.player} cannot make any moves. ${args.player} loses.`);
-			}
 		});
 	}
 
@@ -147,6 +153,7 @@ export class HtmlRenderer {
 		pieceElement.setAttribute('data-x', piece.position.x.toString());
 		pieceElement.setAttribute('data-y', piece.position.y.toString());
 		pieceElement.setAttribute('data-height', piece.height.toString());
+		pieceElement.setAttribute('data-in-play', piece.inPlay.toString());
 	}
 
 	private updateTileElement(tile: Tile): void {
@@ -190,7 +197,7 @@ export class HtmlRenderer {
 			// Check if it's the pieces turn
 			if (this.game.turnPlayer == clickedPiece.owner) {
 				// Check if the piece can move
-				if (this.game.movablePieces.map(mp => mp.piece).includes(clickedPiece)) {
+				if (this.game.getMovablePiecesForCurrentPlayer().map(mp => mp.piece).includes(clickedPiece)) {
 					// It can move
 					this.showPossibleMoves(clickedPiece);
 				}
@@ -209,7 +216,7 @@ export class HtmlRenderer {
 		this.hidePossibleMoves();
 
 		// Create new ones for those in movablePieces
-		for (let movablePiece of this.game.movablePieces.filter(mp => mp.piece == forPiece)) {
+		for (let movablePiece of this.game.getMovablePiecesForCurrentPlayer().filter(mp => mp.piece == forPiece)) {
 			for (let point of movablePiece.possiblePositions) {
 				this.movesHolder.appendChild(
 					HtmlUtilities.elementFromString(`

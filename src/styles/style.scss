@@ -1,23 +1,38 @@
-html, body{
-	background-color:#878787;
-}
-
+// Z indexes
 $zIndexPieces: 0; // Lets say 0-100 for pieces
 $zIndexPieceActive: 101;
 $zIndexMoves: 102;
 
+// Animations
+$pieceMoveAnimation: 500ms ease;
+$pieceFadeAnimation: 1000ms ease;
+$tileFadeAnimation: 1500ms ease;
+
+// Colors
+$color-black: #302e2d;
+$color-red: #9b414a;
+$color-beige: #f2e7de;
+
+// Sizes
+$tile-border-radius: 15%;
+$tile-default-scale: 0.9;
+$move-highlight-size: 10px;
+
+html, body{
+	background-color:#878787;
+}
 
 .turn-hint{
 	height: 100px;
 	width: 200px;
-	border: 1px solid black;
+	border: 1px solid $color-black;
 
 	&.red{
-		background-color: red;
+		background-color: $color-red;
 	}
 
 	&.black{
-		background-color: black;
+		background-color: $color-black;
 	}
 }
 
@@ -51,7 +66,6 @@ $zIndexMoves: 102;
 	// Position pieces and tiles based on x/y
 	piece, tile, move{
 			display: inline-block;
-			cursor: pointer;
 
 			height: $tileHeightPercent;
 			width: $tileWidthPercent;
@@ -81,12 +95,14 @@ $zIndexMoves: 102;
 	.tiles{
 		tile{
 
-			border: 1px solid black;	
-			background-color: white;
+			border: 1px solid $color-black;	
+			background-color: $color-beige;
+			border-radius: $tile-border-radius;
 			transform-origin: center center;
 
 			// Style in-play tiles
 			&[data-in-play="true"]{
+				transform: scale($tile-default-scale);
 				opacity: 1.0;
 			}
 
@@ -97,10 +113,9 @@ $zIndexMoves: 102;
 				border: none !important;
 			}
 
-			$fadeAnimation: 1500ms ease;
 			transition: 
-				opacity #{$fadeAnimation},
-				transform #{$fadeAnimation};
+				opacity #{$tileFadeAnimation},
+				transform #{$tileFadeAnimation};
 		}
 	}
 
@@ -112,36 +127,57 @@ $zIndexMoves: 102;
 
 			border-radius: 50%;
 
-			border: 1px solid black;
+			border: 1px solid $color-black;
 
 			transform-origin: center center;
 
 			// Style pieces by owner
 			&[data-owner="black"]{
-				background-color: black;
+				background-color: $color-black;
 			}
 			&[data-owner="red"]{
-				background-color: red;
+				background-color: $color-red;
 			}
 
 			// Style pieces by height
 			&[data-height="1"]{
+				transform: scale(0.7);
 				z-index: $zIndexPieces + 1;
 			}
 			&[data-height="2"]{
 				z-index: $zIndexPieces + 2;
-				transform: scale(0.7);
+				transform: scale(0.5);
 			}
 			&[data-height="3"]{
 				z-index: $zIndexPieces + 3;
-				transform: scale(0.4);
+				transform: scale(0.3);
 			}
 
-			$moveAnimation: 500ms ease;
+			// Style pieces by abilit to move right now
+			&[data-can-move="true"]{
+				cursor: pointer;
+			}
+			&[data-can-move="false"]{
+				cursor: not-allowed;
+			}
+
+			// Style in-play pieces
+			&[data-in-play="true"]{
+				
+			}
+
+			// Style removed pieces
+			&[data-in-play="false"]{
+				opacity: 0.0 !important;
+				transform: scale(0.0);
+				border: none !important;
+			}
+
 			transition: 
-				top #{$moveAnimation}, 
-				left #{$moveAnimation},
-				transform #{$moveAnimation};
+				top #{$pieceMoveAnimation}, 
+				left #{$pieceMoveAnimation},
+				opacity #{$pieceFadeAnimation},
+				transform #{$pieceMoveAnimation};
 
 			&.last-active-piece{
 				z-index: $zIndexPieceActive;
@@ -158,8 +194,18 @@ $zIndexMoves: 102;
 
 		move{
 			z-index: $zIndexMoves;
-			background-color: red;
-			opacity: 0.3;
+			cursor: pointer;
+			transform: scale($tile-default-scale + 0.02);
+
+			border-radius: $tile-border-radius;
+
+
+			&[data-owner="black"]{	
+				box-shadow: inset 0 0 0 $move-highlight-size $color-black;
+			}
+			&[data-owner="red"]{
+				box-shadow: inset 0 0 0 $move-highlight-size $color-red;
+			}
 		}
 
 	}

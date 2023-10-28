@@ -5,7 +5,6 @@ import { Tile } from "./tile";
 import { EventEmitter } from "./../events/event-emitter";
 import { MoveablePiece } from "./movable-piece";
 import { Rules } from "./rules";
-import { OnPlayerTurnStartEventArgs } from "../events/on-player-turn-start-event-args";
 
 export class Game {
 
@@ -27,8 +26,9 @@ export class Game {
 	public onPieceMoved: EventEmitter<Piece> = new EventEmitter<Piece>();
 	public onTileCreated: EventEmitter<Tile> = new EventEmitter<Tile>();
 	public onTileRemovedFromPlay: EventEmitter<Tile> = new EventEmitter<Tile>();
-	public onPlayerTurnStart: EventEmitter<OnPlayerTurnStartEventArgs> = new EventEmitter<OnPlayerTurnStartEventArgs>();
+	public onPlayerTurnStart: EventEmitter<PlayerType> = new EventEmitter<PlayerType>();
 	public onPlayerTurnEnd: EventEmitter<PlayerType> = new EventEmitter<PlayerType>();
+	public onPieceRemovedFromPlay: EventEmitter<Piece> = new EventEmitter<Piece>();
 
 
 	public initialize(): void {
@@ -40,6 +40,10 @@ export class Game {
 
 		// Setup pieces on back rows
 		this.resetPieces();
+
+		// Set turn
+		// Black starts
+		this.endTurn(PlayerType.Red);
 	}
 
 	public endTurn(forPlayer: PlayerType): void {
@@ -54,20 +58,14 @@ export class Game {
 		this.onPlayerTurnEnd.emit(oldPlayer);
 
 		// Emit that new players turn started
-		this.onPlayerTurnStart.emit(new OnPlayerTurnStartEventArgs(newPlayer, this.movablePieces));
+		this.onPlayerTurnStart.emit(newPlayer);
 	}
 
-	public get movablePieces(): MoveablePiece[] {
+	private get movablePieces(): MoveablePiece[] {
 		let possibleMoves: MoveablePiece[] = [];
 
-		// Get the current player
-		let currentPlayer: PlayerType = this.turnPlayer;
-
-		// Get their current active pieces
-		let pieces: Piece[] = this.pieces.filter(p => p.owner == currentPlayer);
-
-		// For each of the current player's pieces
-		for (let piece of pieces) {
+		// For each piece
+		for (let piece of this.pieces) {
 			// Get its valid moves
 			let validMoves: Point[] = piece.validMoves;
 
@@ -85,42 +83,21 @@ export class Game {
 		return possibleMoves;
 	}
 
+	public getMovablePiecesForCurrentPlayer(): MoveablePiece[] {
+		// Get the current player
+		let currentPlayer: PlayerType = this.turnPlayer;
 
-	sleep = async (milliseconds: number): Promise<void> => {
-		return new Promise(resolve => setTimeout(resolve, milliseconds));
-	};
-	public async emulatePlay(): Promise<void> {
-		let dur: number = 500;
+		let movablePieces: MoveablePiece[] = this.movablePieces;
 
-		// Black
-		let blackPiece: Piece = this.pieces.filter(p => p.id == 'black|1')[0];
-		blackPiece.move(new Point(0, 1));
-		await this.sleep(dur);
+		movablePieces = movablePieces.filter(p => p.piece.owner == currentPlayer);
 
-		// Red
-		let redPiece: Piece = this.pieces.filter(p => p.id == 'red|1')[0];
-		redPiece.move(new Point(1, 3));
-		await this.sleep(dur);
-
-		// Black
-		blackPiece.move(new Point(0, 2));
-		await this.sleep(dur);
-
-		// Red stacks
-		redPiece.move(new Point(2, 4));
-		await this.sleep(dur);
-
-		// Black goes on top
-		blackPiece.move(new Point(1, 2));
-		await this.sleep(dur);
-		blackPiece.move(new Point(2, 3));
-		await this.sleep(dur);
-		blackPiece.move(new Point(2, 4));
-		await this.sleep(dur);
-
-		blackPiece.move(new Point(3, 3));
-		await this.sleep(dur);
+		return movablePieces;
 	}
+
+	public getMovablePiecesForAnyPlayer(): MoveablePiece[] {
+		return this.movablePieces;
+	}
+
 
 	// Reset state of all tiles
 	private resetTiles(): void {
@@ -166,10 +143,92 @@ export class Game {
 		this.onTileCreated.emit(tile);
 	}
 
+	public getIslands(): Tile[][] {
+		const islands: Tile[][] = [];
+		const visited: Set<Tile> = new Set();
+
+		const dfs = (tile: Tile, island: Tile[]) => {
+			if (visited.has(tile)) return;
+
+			visited.add(tile);
+			island.push(tile);
+
+			for (const adjacentTile of tile.adjacentTiles) {
+				dfs(adjacentTile, island);
+			}
+		};
+
+		for (const tile of this.tiles) {
+			if (!visited.has(tile)) {
+				const newIsland: Tile[] = [];
+				dfs(tile, newIsland);
+				islands.push(newIsland);
+			}
+		}
+
+		return islands;
+	}
+
 	// Piece helpers
 	private createPiece(piece: Piece): void {
 		this.pieces.push(piece);
 		this.onPieceCreated.emit(piece);
+	}
+
+
+
+
+	// TODO: remove me
+	sleep = async (milliseconds: number): Promise<void> => {
+		return new Promise(resolve => setTimeout(resolve, milliseconds));
+	};
+	public async emulatePlay(): Promise<void> {
+		let dur: number = 500;
+
+		// Black
+		let blackPiece: Piece = this.pieces.filter(p => p.id == 'black|1')[0];
+
+		// Red
+		let redPiece: Piece = this.pieces.filter(p => p.id == 'red|5')[0];
+		let redPiece2: Piece = this.pieces.filter(p => p.id == 'red|4')[0];
+
+		let move: (piece: Piece, dir: string) => void = (piece: Piece, dir: string) => {
+			let x = piece.position.x;
+			let y = piece.position.y;
+			if (dir == 'up') y++;
+			if (dir == 'down') y--;
+			if (dir == 'left') x--;
+			if (dir == 'right') x++;
+			piece.move(new Point(x, y));
+		};
+
+		// Black
+		move(blackPiece, 'up');
+		await this.sleep(dur);
+		move(blackPiece, 'right');
+		await this.sleep(dur);
+		move(blackPiece, 'up');
+		await this.sleep(dur);
+		move(blackPiece, 'up');
+		await this.sleep(dur);
+		move(blackPiece, 'left');
+		await this.sleep(dur);
+		move(blackPiece, 'up');
+
+		// Red
+		move(redPiece, 'down');
+		await this.sleep(dur);
+
+		move(redPiece2, 'down');
+		await this.sleep(dur);
+		move(redPiece2, 'down');
+		await this.sleep(dur);
+		move(redPiece2, 'right');
+		await this.sleep(dur);
+		move(redPiece2, 'down');
+		await this.sleep(dur);
+
+
 	}
 
 }
