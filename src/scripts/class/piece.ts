@@ -62,11 +62,11 @@ export class Piece {
 			this.position = newPosition;
 
 			// Have tile check if it's empty now, and if so, remove it
-
 			if (sourceTile.isEmpty) {
 				sourceTile.removeFromPlay();
 			}
 
+			// Check for orphaned islands
 			let islands: Tile[][] = this.game.getIslands();
 			if (islands.length > 1) {
 				// We have orphaned islands

@@ -7,6 +7,7 @@ $zIndexMoves: 102;
 $pieceMoveAnimation: 500ms ease;
 $pieceFadeAnimation: 1000ms ease;
 $tileFadeAnimation: 1500ms ease;
+$moveBackgroundPulse: 2000ms infinite ease-in-out;
 
 // Colors
 $color-black: #302e2d;
@@ -18,27 +19,74 @@ $tile-border-radius: 15%;
 $tile-default-scale: 0.9;
 $move-highlight-size: 10px;
 
+// Mixins
+@mixin generate-pulsate($name, $color) {
+  @keyframes #{$name} {
+    0%, 100% {
+      background-color: rgba(transparent, 0);
+    }
+    50% {
+      background-color: rgba($color, 0.75);
+    }
+  }
+}
+
+// Define some keyframe animations for red and black pulses
+@include generate-pulsate("pulsate-red", $color-red);
+@include generate-pulsate("pulsate-black", $color-black);
+
 html, body{
-	background-color:#878787;
+	background-color: darken(desaturate($color-beige, 40%), 35%);
+	overflow: hidden;
 }
 
 .turn-hint{
-	height: 100px;
+	// Size it
+	height: 20px;
 	width: 200px;
-	border: 1px solid $color-black;
+	border-radius: 5px;
 
+
+	// Center content
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	// Color it
+	border-style: solid;
+	border-width: 2px;
+	color: $color-beige;
+
+	// Set font
+	font-family: sans-serif;
+	font-size: 12px;
+
+	// Center it 
+	margin-left: auto;
+	margin-right: auto;
+
+	$border-darken-percent: 10%;
 	&.red{
 		background-color: $color-red;
+		border-color: darken($color-red, $border-darken-percent);
+		&::after{
+			content: 'Red to move';
+		}
 	}
 
 	&.black{
 		background-color: $color-black;
+		border-color: darken($color-black, $border-darken-percent);
+		&::after{
+			content: 'Black to move';
+		}
 	}
 }
 
 .game-area{
 	display: flex;
     justify-content: center;
+	transform: perspective(500px) rotateX(7deg) rotateY(0deg);
 }
 
 .board{
@@ -186,7 +234,7 @@ html, body{
 			&[data-can-move="false"]{
 				opacity: 0.5;
 			}
-			
+		
 		}
 	}
 
@@ -195,19 +243,38 @@ html, body{
 		move{
 			z-index: $zIndexMoves;
 			cursor: pointer;
+
+			// Size it like the tile underneath it
 			transform: scale($tile-default-scale + 0.02);
 
+			// Round it off like the tile underneath it
 			border-radius: $tile-border-radius;
 
-
+			// Give it a border and background
 			&[data-owner="black"]{	
 				box-shadow: inset 0 0 0 $move-highlight-size $color-black;
+				animation: pulsate-black $moveBackgroundPulse;
 			}
 			&[data-owner="red"]{
 				box-shadow: inset 0 0 0 $move-highlight-size $color-red;
+				animation: pulsate-red $moveBackgroundPulse;
 			}
+			
 		}
 
 	}
 
+}
+
+@keyframes pulsate {
+  0%, 100% {
+    background: linear-gradient(to bottom, rgba(255, 0, 0, 0), rgba(255, 0, 0, 1));
+  }
+  50% {
+    background: linear-gradient(to bottom, rgba(255, 0, 0, 1), rgba(255, 0, 0, 1));
+  }
+}
+
+.pulsating-bg {
+  animation: pulsate 3s infinite ease-in-out;
 }
