@@ -41,6 +41,9 @@ html, body{
 }
 
 .turn-hint{
+	position: relative;
+	z-index: 999;
+
 	// Size it
 	height: 20px;
 	width: 200px;
@@ -207,6 +210,7 @@ html, body{
 			}
 			&[data-can-move="false"]{
 				cursor: not-allowed;
+				opacity: 0.75;
 			}
 
 			// Style in-play pieces
@@ -229,10 +233,6 @@ html, body{
 
 			&.last-active-piece{
 				z-index: $zIndexPieceActive;
-			}
-
-			&[data-can-move="false"]{
-				opacity: 0.5;
 			}
 		
 		}

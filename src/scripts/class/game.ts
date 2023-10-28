@@ -65,7 +65,7 @@ export class Game {
 		let possibleMoves: MoveablePiece[] = [];
 
 		// For each piece
-		for (let piece of this.pieces) {
+		for (let piece of this.pieces.filter(p => p.inPlay)) {
 			// Get its valid moves
 			let validMoves: Point[] = piece.validMoves;
 
