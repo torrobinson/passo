@@ -120,16 +120,18 @@ export class HtmlRenderer {
 				pieceElement.setAttribute('data-can-move', false.toString());
 			}
 
-			let allPossibleMoves: MoveablePiece[] = this.game.getMovablePiecesForAnyPlayer();
-			for (let player of [PlayerType.Red, PlayerType.Black]) {
-				let playerMovablePieces: MoveablePiece[] = allPossibleMoves.filter(mp => mp.piece.owner == player);
-				if (playerMovablePieces.length == 0) {
-					// The players turn has started but they can't make any moves == they lose
-					alert(`${player} cannot make any moves. ${player} loses.`);
-				}
+			// TODO: move win/lose condition to singular game logic location
+			// Check for: either player has no pieces
+			// current player has no moves
+			// player has just moved to goalpost
+
+			let newPlayerPossibleMoves: MoveablePiece[] = this.game.getMovablePiecesForCurrentPlayer();
+			if (newPlayerPossibleMoves.length == 0) {
+				// The players turn has started but they can't make any moves == they lose
+				alert(`${newPlayer} cannot make any moves. ${newPlayer} loses.`);
 			}
 
-			for (let moveablePiece of allPossibleMoves.filter(mp => mp.piece.owner == this.game.turnPlayer)) {
+			for (let moveablePiece of newPlayerPossibleMoves) {
 				let moveablePieceElement: HTMLElement = this.getPieceElement(moveablePiece.piece)!;
 				moveablePieceElement.setAttribute('data-can-move', true.toString());
 			}

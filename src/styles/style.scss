@@ -198,10 +198,23 @@ html, body{
 			&[data-height="2"]{
 				z-index: $zIndexPieces + 2;
 				transform: scale(0.5);
+				margin-top: -3px;
 			}
 			&[data-height="3"]{
 				z-index: $zIndexPieces + 3;
 				transform: scale(0.3);
+				margin-top: -7px;
+			}
+
+			// Style bevel and shadow. Bevel for 1, shadow for 2 and 3
+			$white-bevel: inset 0px 2px 3px 2px rgba(white, 0.21);
+			&[data-height="1"]{
+				box-shadow: $white-bevel;
+			}
+			&[data-height="2"], &[data-height="3"]{
+				box-shadow: 
+							0 4px 4px 2px black, 
+							$white-bevel;
 			}
 
 			// Style pieces by abilit to move right now
@@ -210,7 +223,6 @@ html, body{
 			}
 			&[data-can-move="false"]{
 				cursor: not-allowed;
-				opacity: 0.75;
 			}
 
 			// Style in-play pieces
