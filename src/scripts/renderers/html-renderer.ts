@@ -47,6 +47,38 @@ export class HtmlRenderer {
 				this.movePiece(this.selectedPiece, clickedPoint);
 			}
 		});
+
+		HtmlUtilities.liveBind('dragstart', 'piece', (el, e: DragEvent) => {
+			//console.log('dragstart on' + el.getAttribute('data-id'));
+			let x: number = parseInt(el.getAttribute('data-x')!);
+			let y: number = parseInt(el.getAttribute('data-y')!);
+			let piece: Piece = this.game.pieces.filter(p => p.position.x == x && p.position.y == y)[0]!;
+			e.dataTransfer?.setData('piece-position', `${x}|${y}`);
+			this.showPossibleMoves(piece);
+		});
+		HtmlUtilities.liveBind('dragend', 'piece', (el, e: DragEvent) => {
+			console.log('dragend on' + el.getAttribute('data-id'));
+			this.hidePossibleMoves();
+		});
+		HtmlUtilities.liveBind('dragover', 'move', (el, e: DragEvent) => {
+			e.preventDefault();
+			console.log('move dragover');
+			return true;
+		});
+		HtmlUtilities.liveBind('drop', 'move', (el, e: DragEvent) => {
+			e.stopPropagation();
+			e.preventDefault();
+			let posStr: string = e.dataTransfer?.getData('piece-position')!;
+			let x = parseInt(posStr.split('|')[0]);
+			let y = parseInt(posStr.split('|')[1]);
+			let piece: Piece = this.game.pieces.filter(p => p.position.x == x && p.position.y == y)[0]!;
+			let point: Point = new Point(
+				parseInt(el.getAttribute('data-x')!),
+				parseInt(el.getAttribute('data-y')!)
+			);
+			piece.move(point);
+			return true;
+		});
 	}
 
 	public bindToGame(game: Game): void {
@@ -84,6 +116,7 @@ export class HtmlRenderer {
 		this.game.onPieceCreated.on((piece: Piece) => {
 			let newPiece: HTMLElement = HtmlUtilities.elementFromString(`
 				<piece 
+					draggable="true"
 					data-id="${piece.id}" 
 					data-x="${piece.position.x}" 
 					data-y="${piece.position.y}" 
@@ -225,7 +258,11 @@ export class HtmlRenderer {
 			for (let point of movablePiece.possiblePositions) {
 				this.movesHolder.appendChild(
 					HtmlUtilities.elementFromString(`
-						<move data-x="${point.x}" data-y="${point.y}" data-piece-id="${movablePiece.piece.id}" data-owner="${movablePiece.piece.owner}">
+						<move
+							data-x="${point.x}" 
+							data-y="${point.y}" 
+							data-piece-id="${movablePiece.piece.id}" 
+							data-owner="${movablePiece.piece.owner}">
 						</move>
 					`)
 				)

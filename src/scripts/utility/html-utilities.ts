@@ -17,12 +17,15 @@ export abstract class HtmlUtilities {
 	// 	});
 	// }
 
-	static liveBind(eventType: string, elementQuerySelector: string, cb: (el: Element, event: Event) => void): void {
-		//document.removeEventListener(eventType, handler);
+	static liveBind<T extends Event>(
+		eventType: string,
+		elementQuerySelector: string,
+		cb: (el: Element, event: T) => void
+	): void {
 		document.addEventListener(eventType, (event: Event) => {
-			let el = (event.target as Element).closest(elementQuerySelector);
+			const el = (event.target as Element).closest(elementQuerySelector);
 			if (el) {
-				cb.call(this, el, event);
+				cb.call(this, el, event as T);
 			}
 		});
 	}

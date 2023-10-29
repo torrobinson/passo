@@ -23,10 +23,10 @@ $move-highlight-size: 10px;
 @mixin generate-pulsate($name, $color) {
   @keyframes #{$name} {
     0%, 100% {
-      background-color: rgba(transparent, 0);
+      background-color: rgba($color, 0.30);
     }
     50% {
-      background-color: rgba($color, 0.75);
+      background-color: rgba($color, 0.60);
     }
   }
 }
@@ -150,6 +150,9 @@ html, body{
 			background-color: $color-beige;
 			border-radius: $tile-border-radius;
 			transform-origin: center center;
+
+			// Shadow
+			box-shadow: 0px 4px 8px -2px rgba(0,0,0, 0.24);
 
 			// Style in-play tiles
 			&[data-in-play="true"]{
