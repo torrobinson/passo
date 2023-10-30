@@ -59,6 +59,12 @@ export class HtmlRenderer {
 			}
 		});
 
+		// Bind to piece clicks
+		HtmlUtilities.liveBind('click', '.restart-game', (el, e) => {
+			this.game.initialize();
+			this.hideWinScreen();
+		});
+
 
 		// Drag Events
 		// Note: make <piece> have draggable="true" if I enable this again
@@ -346,6 +352,17 @@ export class HtmlRenderer {
 		this.winScreen.innerHTML = `
 			<div style="text-transform: uppercase">${winningPlayer} wins</div>
 			<div style="font-size: 30px;">${winningReason}</div>
+			<div class="restart-game" style="
+				cursor: pointer;  
+				margin-top: 10px;
+ 				font-weight: bold; 
+				font-size: 25px;
+				border: 1px solid white;
+				padding: 5px 10px;
+				border-radius: 7px;
+			">
+				Restart
+			</div>
 		`;
 	}
 

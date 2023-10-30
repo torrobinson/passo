@@ -13,6 +13,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	// Initialize the game
 	game.initialize();
-
-	//game.emulatePlay();
 });

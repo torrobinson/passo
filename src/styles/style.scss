@@ -32,6 +32,16 @@ $move-highlight-size: 10px;
   }
 }
 
+*{
+	// Mobile un-fucks:
+
+	// Don't turn blue when tapped on mobile
+	-webkit-tap-highlight-color: transparent;
+
+	// Speed up taps on mobile
+	touch-action: manipulation;
+}
+
 // Define some keyframe animations for red and black pulses
 @include generate-pulsate("pulsate-red", $color-red);
 @include generate-pulsate("pulsate-black", $color-black);
@@ -289,6 +299,7 @@ html, body{
 	.moves{
 
 		move{
+
 			z-index: $zIndexMoves;
 			cursor: pointer;
 
