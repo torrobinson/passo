@@ -13,6 +13,7 @@ $moveBackgroundPulse: 2000ms infinite ease-in-out;
 $color-black: #302e2d;
 $color-red: #9b414a;
 $color-beige: #f2e7de;
+$color-win: #ffd82c;
 
 // Sizes
 $tile-border-radius: 15%;
@@ -34,6 +35,7 @@ $move-highlight-size: 10px;
 // Define some keyframe animations for red and black pulses
 @include generate-pulsate("pulsate-red", $color-red);
 @include generate-pulsate("pulsate-black", $color-black);
+@include generate-pulsate("pulsate-win", $color-win);
 
 html, body{
 	background-color: darken(desaturate($color-beige, 40%), 35%);
@@ -122,12 +124,14 @@ html, body{
 			width: $tileWidthPercent;
 
 			position: absolute !important;
+
 			@for $x from 0 through $width {
 				&[data-x='#{$x}']{
 					left: #{$x * $tileWidthPercent};
 				}
 			}
-			@for $y from 0 through $height {
+			// The -1 and +1 (rather than 0s) are because we want to render win condition `moves` that are vertically OOB, but we need to support rendering them
+			@for $y from -1 through ($height + 1){
 				&[data-y='#{$y}']{
 					top: #{100% - ($y + 1) * $tileHeightPercent};
 				}
@@ -230,7 +234,7 @@ html, body{
 
 			// Style in-play pieces
 			&[data-in-play="true"]{
-				
+				// Nothing yet
 			}
 
 			// Style removed pieces
@@ -273,6 +277,23 @@ html, body{
 			&[data-owner="red"]{
 				box-shadow: inset 0 0 0 $move-highlight-size $color-red;
 				animation: pulsate-red $moveBackgroundPulse;
+			}
+
+			// Style winning goalpost moves
+			&[data-is-goalpost="true"]{
+				box-shadow: inset 0 0 0 $move-highlight-size $color-win;
+				animation: pulsate-win $moveBackgroundPulse;
+
+				&::after{
+					content: "WIN";
+					font-family: sans-serif;
+					font-size: 30px;
+					color: $color-win;
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					height: 100%;
+				}
 			}
 			
 		}

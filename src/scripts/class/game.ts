@@ -5,6 +5,9 @@ import { Tile } from "./tile";
 import { EventEmitter } from "./../events/event-emitter";
 import { MoveablePiece } from "./movable-piece";
 import { Rules } from "./rules";
+import { WinCondition } from "../enum/win-condition";
+import { GameWonEventArgs } from "../events/game-won-event-args";
+import { Move } from "./move";
 
 export class Game {
 
@@ -17,8 +20,8 @@ export class Game {
 	public turnPlayer: PlayerType = PlayerType.Red;
 
 	// Dimensions
-	private height: number = 5;
-	private width: number = 5;
+	public height: number = 5;
+	public width: number = 5;
 
 	// Events
 	public onGameStart: EventEmitter<Game> = new EventEmitter<Game>();
@@ -29,6 +32,7 @@ export class Game {
 	public onPlayerTurnStart: EventEmitter<PlayerType> = new EventEmitter<PlayerType>();
 	public onPlayerTurnEnd: EventEmitter<PlayerType> = new EventEmitter<PlayerType>();
 	public onPieceRemovedFromPlay: EventEmitter<Piece> = new EventEmitter<Piece>();
+	public onGameWon: EventEmitter<GameWonEventArgs> = new EventEmitter<GameWonEventArgs>();
 
 
 	public initialize(): void {
@@ -61,13 +65,18 @@ export class Game {
 		this.onPlayerTurnStart.emit(newPlayer);
 	}
 
+	public winGameByCurrentPlayer(winCondition: WinCondition): void {
+
+	}
+
+
 	private get movablePieces(): MoveablePiece[] {
 		let possibleMoves: MoveablePiece[] = [];
 
 		// For each piece
 		for (let piece of this.pieces.filter(p => p.inPlay)) {
 			// Get its valid moves
-			let validMoves: Point[] = piece.validMoves;
+			let validMoves: Move[] = piece.validMoves;
 
 			// And create a movable piece if it has any
 			if (validMoves.length > 0) {
@@ -90,6 +99,17 @@ export class Game {
 		let movablePieces: MoveablePiece[] = this.movablePieces;
 
 		movablePieces = movablePieces.filter(p => p.piece.owner == currentPlayer);
+
+		return movablePieces;
+	}
+
+	public getMovablePiecesForOtherPlayer(): MoveablePiece[] {
+		// Get the current player
+		let otherPlayer: PlayerType = this.turnPlayer == PlayerType.Black ? PlayerType.Red : PlayerType.Black;
+
+		let movablePieces: MoveablePiece[] = this.movablePieces;
+
+		movablePieces = movablePieces.filter(p => p.piece.owner == otherPlayer);
 
 		return movablePieces;
 	}

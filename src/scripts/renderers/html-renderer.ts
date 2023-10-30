@@ -4,6 +4,8 @@ import { Piece } from "../class/piece";
 import { Point } from "../class/point";
 import { Tile } from "../class/tile";
 import { PlayerType } from "../enum/player-type";
+import { WinCondition } from "../enum/win-condition";
+import { GameWonEventArgs } from "../events/game-won-event-args";
 import { HtmlUtilities } from "../utility/html-utilities";
 
 export class HtmlRenderer {
@@ -48,37 +50,77 @@ export class HtmlRenderer {
 			}
 		});
 
-		HtmlUtilities.liveBind('dragstart', 'piece', (el, e: DragEvent) => {
-			//console.log('dragstart on' + el.getAttribute('data-id'));
-			let x: number = parseInt(el.getAttribute('data-x')!);
-			let y: number = parseInt(el.getAttribute('data-y')!);
-			let piece: Piece = this.game.pieces.filter(p => p.position.x == x && p.position.y == y)[0]!;
-			e.dataTransfer?.setData('piece-position', `${x}|${y}`);
-			this.showPossibleMoves(piece);
-		});
-		HtmlUtilities.liveBind('dragend', 'piece', (el, e: DragEvent) => {
-			console.log('dragend on' + el.getAttribute('data-id'));
-			this.hidePossibleMoves();
-		});
-		HtmlUtilities.liveBind('dragover', 'move', (el, e: DragEvent) => {
-			e.preventDefault();
-			console.log('move dragover');
-			return true;
-		});
-		HtmlUtilities.liveBind('drop', 'move', (el, e: DragEvent) => {
-			e.stopPropagation();
-			e.preventDefault();
-			let posStr: string = e.dataTransfer?.getData('piece-position')!;
-			let x = parseInt(posStr.split('|')[0]);
-			let y = parseInt(posStr.split('|')[1]);
-			let piece: Piece = this.game.pieces.filter(p => p.position.x == x && p.position.y == y)[0]!;
-			let point: Point = new Point(
-				parseInt(el.getAttribute('data-x')!),
-				parseInt(el.getAttribute('data-y')!)
-			);
-			piece.move(point);
-			return true;
-		});
+
+		// Drag Events
+		// Note: make <piece> have draggable="true" if I enable this again
+		// let draggedPiece: Piece | null = null;
+		// let draggedPieceOrigin: Point | null = null;
+		// let wasProperDrop: boolean = false;
+		// HtmlUtilities.liveBind('dragstart', 'piece', (el, e: DragEvent) => {
+		// 	// Get the X and Y
+		// 	let x: number = parseInt(el.getAttribute('data-x')!);
+		// 	let y: number = parseInt(el.getAttribute('data-y')!);
+
+		// 	// Resolve to a piece
+		// 	let piece: Piece = this.game.pieces.filter(p => p.position.x == x && p.position.y == y)[0]!;
+
+		// 	// Set the x/y as drag event data
+		// 	draggedPiece = piece;
+		// 	draggedPieceOrigin = piece.position;
+
+		// 	// Show possible moves
+		// 	this.showPossibleMoves(piece);
+		// });
+		// HtmlUtilities.liveBind('dragend', 'piece', (el, e: DragEvent) => {
+
+		// 	if (draggedPiece != null) {
+		// 		if (!wasProperDrop) {
+		// 			// If we DIDNT already handled a proper drop event, thenthis drop was abandoned, so revert to original location
+		// 			let pieceElement: HTMLElement = this.getPieceElement(draggedPiece)!;
+		// 			pieceElement.setAttribute('data-x', draggedPieceOrigin!.x.toString());
+		// 			pieceElement.setAttribute('data-y', draggedPieceOrigin!.y.toString());
+		// 		}
+
+		// 		draggedPiece = null;
+		// 		draggedPieceOrigin = null;
+		// 	}
+
+
+		// 	this.hidePossibleMoves();
+		// });
+		// HtmlUtilities.liveBind('dragover', 'move', (el, e: DragEvent) => {
+		// 	e.preventDefault();
+
+		// 	// Hover location
+		// 	let x: number = parseInt(el.getAttribute('data-x')!);
+		// 	let y: number = parseInt(el.getAttribute('data-y')!);
+
+		// 	if (draggedPiece != null) {
+		// 		let pieceElement: HTMLElement = this.getPieceElement(draggedPiece)!;
+		// 		pieceElement.setAttribute('data-x', x.toString());
+		// 		pieceElement.setAttribute('data-y', y.toString());
+		// 	}
+
+		// 	return true;
+		// });
+		// HtmlUtilities.liveBind('drop', 'move', (el, e: DragEvent) => {
+		// 	e.stopPropagation();
+		// 	e.preventDefault();
+
+
+		// 	if (draggedPiece != null) {
+		// 		// Move to the point of that dropped move
+		// 		let point: Point = new Point(
+		// 			parseInt(el.getAttribute('data-x')!),
+		// 			parseInt(el.getAttribute('data-y')!)
+		// 		);
+		// 		draggedPiece.move(point);
+		// 	}
+
+		// 	wasProperDrop = true;
+
+		// 	return true;
+		// });
 	}
 
 	public bindToGame(game: Game): void {
@@ -116,7 +158,6 @@ export class HtmlRenderer {
 		this.game.onPieceCreated.on((piece: Piece) => {
 			let newPiece: HTMLElement = HtmlUtilities.elementFromString(`
 				<piece 
-					draggable="true"
 					data-id="${piece.id}" 
 					data-x="${piece.position.x}" 
 					data-y="${piece.position.y}" 
@@ -153,22 +194,28 @@ export class HtmlRenderer {
 				pieceElement.setAttribute('data-can-move', false.toString());
 			}
 
-			// TODO: move win/lose condition to singular game logic location
-			// Check for: either player has no pieces
-			// current player has no moves
-			// player has just moved to goalpost
-
 			let newPlayerPossibleMoves: MoveablePiece[] = this.game.getMovablePiecesForCurrentPlayer();
-			if (newPlayerPossibleMoves.length == 0) {
-				// The players turn has started but they can't make any moves == they lose
-				alert(`${newPlayer} cannot make any moves. ${newPlayer} loses.`);
-			}
 
 			for (let moveablePiece of newPlayerPossibleMoves) {
 				let moveablePieceElement: HTMLElement = this.getPieceElement(moveablePiece.piece)!;
 				moveablePieceElement.setAttribute('data-can-move', true.toString());
 			}
 
+		});
+
+		// When a game is won
+		this.game.onGameWon.on((e: GameWonEventArgs) => {
+			let winConditionStr: string;
+			switch (e.winCondition) {
+				case WinCondition.GoalpostReached:
+					winConditionStr = 'reaching the goal';
+					break;
+				case WinCondition.OpponentNoMoves:
+					winConditionStr = 'leaving opponent with no valid moves';
+					break;
+			}
+			let message: string = `${e.winningPlayer} wins by ${winConditionStr}`;
+			alert(message);
 		});
 	}
 
@@ -255,14 +302,15 @@ export class HtmlRenderer {
 
 		// Create new ones for those in movablePieces
 		for (let movablePiece of this.game.getMovablePiecesForCurrentPlayer().filter(mp => mp.piece == forPiece)) {
-			for (let point of movablePiece.possiblePositions) {
+			for (let move of movablePiece.possibleMoves) {
 				this.movesHolder.appendChild(
 					HtmlUtilities.elementFromString(`
 						<move
-							data-x="${point.x}" 
-							data-y="${point.y}" 
+							data-x="${move.toPosition.x}" 
+							data-y="${move.toPosition.y}" 
 							data-piece-id="${movablePiece.piece.id}" 
-							data-owner="${movablePiece.piece.owner}">
+							data-owner="${movablePiece.piece.owner}"
+							data-is-goalpost="${move.isGoalpostWin}">
 						</move>
 					`)
 				)

@@ -1,12 +1,11 @@
+import { Move } from "./move";
 import { Piece } from "./piece";
-import { Point } from "./point";
-
 export class MoveablePiece {
 	piece: Piece;
-	possiblePositions: Point[];
+	possibleMoves: Move[];
 
-	constructor(piece: Piece, possiblePositions: Point[]) {
+	constructor(piece: Piece, possibleMoves: Move[]) {
 		this.piece = piece;
-		this.possiblePositions = possiblePositions;
+		this.possibleMoves = possibleMoves;
 	}
 }
