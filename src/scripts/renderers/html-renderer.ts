@@ -17,6 +17,8 @@ export class HtmlRenderer {
 
 	turnHint: HTMLElement;
 
+	winScreen: HTMLElement;
+
 	constructor() {
 		this.game = new Game();
 
@@ -26,14 +28,21 @@ export class HtmlRenderer {
 
 		this.turnHint = document.querySelector('.turn-hint')!;
 
+		this.winScreen = document.querySelector('.win-screen')!;
+
 		// Bind to piece clicks
 		HtmlUtilities.liveBind('click', 'piece', (el, e) => {
+
+			// Prevent if game is over
+			if (this.game.isOver) return;
+
 			let clickedPiece: Piece = this.game.pieces.filter(p => p.id == el.getAttribute('data-id'))![0];
 			this.handlePieceClicked(clickedPiece);
 		});
 
 		// Bind to move clicks
 		HtmlUtilities.liveBind('click', 'move', (el, e) => {
+
 			// Parse the clicked location from  the move overlay
 			let clickedPoint: Point = new Point(
 				parseInt(el.getAttribute('data-x')!),
@@ -205,17 +214,27 @@ export class HtmlRenderer {
 
 		// When a game is won
 		this.game.onGameWon.on((e: GameWonEventArgs) => {
+
 			let winConditionStr: string;
 			switch (e.winCondition) {
 				case WinCondition.GoalpostReached:
-					winConditionStr = 'reaching the goal';
+					winConditionStr = 'by reaching the goal';
 					break;
 				case WinCondition.OpponentNoMoves:
-					winConditionStr = 'leaving opponent with no valid moves';
+					winConditionStr = 'by leaving opponent with no valid moves';
 					break;
 			}
-			let message: string = `${e.winningPlayer} wins by ${winConditionStr}`;
-			alert(message);
+
+			setTimeout(() => {
+				// Hide in-play ui elements
+				this.hidePossibleMoves();
+
+				// Show win animations
+				this.showWinScreen(
+					e.winningPlayer,
+					winConditionStr
+				);
+			}, 750);
 		});
 	}
 
@@ -319,5 +338,20 @@ export class HtmlRenderer {
 	}
 	private hidePossibleMoves(): void {
 		this.movesHolder.innerHTML = '';
+	}
+
+	private showWinScreen(winningPlayer: PlayerType, winningReason: string): void {
+		this.winScreen.style.visibility = 'visible';
+		this.winScreen.style.opacity = '0.7';
+		this.winScreen.innerHTML = `
+			<div style="text-transform: uppercase">${winningPlayer} wins</div>
+			<div style="font-size: 30px;">${winningReason}</div>
+		`;
+	}
+
+	private hideWinScreen(): void {
+		this.winScreen.style.visibility = 'hidden';
+		this.winScreen.style.opacity = '0.0';
+		this.winScreen.innerHTML = '';
 	}
 }

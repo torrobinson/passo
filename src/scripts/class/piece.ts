@@ -171,8 +171,8 @@ export class Piece {
 			if (wasGoalMove) winCondition = WinCondition.GoalpostReached;
 
 			if (winCondition != null) {
-				// Emit a win
-				this.game.onGameWon.emit(new GameWonEventArgs(this.game.turnPlayer, winCondition));
+				// Trigger a win
+				this.game.winGameByPlayer(this.game.turnPlayer, winCondition)
 			}
 			else {
 				// Wasn't a win, so end their turn

@@ -18,6 +18,7 @@ export class Game {
 	public pieces: Piece[] = [];
 	public tiles: Tile[] = [];
 	public turnPlayer: PlayerType = PlayerType.Red;
+	public isOver: boolean = false;
 
 	// Dimensions
 	public height: number = 5;
@@ -36,6 +37,8 @@ export class Game {
 
 
 	public initialize(): void {
+		this.isOver = false;
+
 		// Emit that a new game has started
 		this.onGameStart.emit(this);
 
@@ -65,8 +68,9 @@ export class Game {
 		this.onPlayerTurnStart.emit(newPlayer);
 	}
 
-	public winGameByCurrentPlayer(winCondition: WinCondition): void {
-
+	public winGameByPlayer(winningPlayer: PlayerType, winCondition: WinCondition): void {
+		this.isOver = true;
+		this.onGameWon.emit(new GameWonEventArgs(winningPlayer, winCondition));
 	}
 
 
