@@ -9,3 +9,5 @@ Run `gulp dev` to  begin compiling and minifying the SCSS+TS and then visit `ind
 ![](docs/img/passo-1.png)
 
 ![](docs/img/passo-2.png)
+
+![](docs/img/passo-3.png)
